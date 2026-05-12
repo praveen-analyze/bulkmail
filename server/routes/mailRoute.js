@@ -2,22 +2,36 @@ const router = require("express").Router();
 const nodemailer = require("nodemailer");
 const Mail = require("../models/MailModel");
 
-const transporter = nodemailer.createTransport({
+const transporter =
+    nodemailer.createTransport({
 
-    host: "smtp.gmail.com",
+        host:
+            "smtp.gmail.com",
 
-    port: 587,
+        port:
+            587,
 
-    secure: false,
+        secure:
+            false,
 
-    family: 4,
+        requireTLS:
+            true,
 
-    auth: {
-        user: process.env.EMAIL,
-        pass: process.env.PASSWORD
-    }
-});
+        auth: {
 
+            user:
+                process.env.EMAIL,
+
+            pass:
+                process.env.PASSWORD
+        },
+
+        tls: {
+
+            servername:
+                "smtp.gmail.com"
+        }
+    });
 router.post("/send", async (req, res) => {
 
     try {
