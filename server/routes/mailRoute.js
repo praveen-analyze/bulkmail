@@ -14,47 +14,72 @@ router.post("/send", async (req, res) => {
 
     try {
 
-        const { subject, message, recipients } = req.body;
+        const {
+            subject,
+            message,
+            recipients
+        } = req.body;
 
-        // Validation
-        if (!subject || !message || !recipients?.length) {
+        if (
+            !subject ||
+            !message ||
+            !recipients?.length
+        ) {
 
-            return res.status(400).json({
+            return res
+            .status(400)
+            .json({
                 success: false,
-                message: "All fields are required"
+                message:
+                    "All fields are required"
             });
         }
 
-        console.log("Sending mails...");
-        console.log("Recipients:", recipients);
+        console.log(
+            "Sending mails..."
+        );
 
-        // Send mails
-        for (const email of recipients) {
+        // Send once to all recipients
+        const info =
+            await transporter.sendMail({
 
-            const info =
-                await transporter.sendMail({
-                    from: process.env.EMAIL,
-                    to: email,
-                    subject: subject,
-                    text: message
-                });
+                from:
+                    process.env.EMAIL,
 
-            console.log(
-                "Mail sent:",
-                info.response
-            );
-        }
+                to:
+                    recipients.join(","),
 
-        // Save success
+                subject:
+                    subject,
+
+                text:
+                    message
+            });
+
+        console.log(
+            "Mail sent:",
+            info.response
+        );
+
+        // Save in MongoDB
         await Mail.create({
+
             subject,
+
             message,
+
             recipients,
-            status: "Success"
+
+            status:
+                "Success"
         });
 
-        return res.json({
+        return res
+        .status(200)
+        .json({
+
             success: true,
+
             message:
                 "Mails sent successfully"
         });
@@ -65,27 +90,18 @@ router.post("/send", async (req, res) => {
             "MAIL ERROR:"
         );
 
-        console.log(error);
+        console.log(
+            error.message
+        );
 
-        try {
+        return res
+        .status(500)
+        .json({
 
-            await Mail.create({
-                ...req.body,
-                status: "Failed"
-            });
-
-        } catch (dbError) {
-
-            console.log(
-                "DB ERROR:"
-            );
-
-            console.log(dbError);
-        }
-
-        return res.status(500).json({
             success: false,
-            message: error.message
+
+            message:
+                error.message
         });
     }
 });
@@ -94,27 +110,13 @@ router.get(
     "/history",
     async (req, res) => {
 
-        try {
-
-            const data =
-                await Mail.find()
-                .sort({
-                    createdAt: -1
-                });
-
-            return res.json(data);
-
-        } catch (error) {
-
-            console.log(error);
-
-            return res
-            .status(500)
-            .json({
-                message:
-                    error.message
+        const data =
+            await Mail.find()
+            .sort({
+                createdAt: -1
             });
-        }
+
+        res.json(data);
     }
 );
 
